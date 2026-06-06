@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/app/Controllers/UsuariosController.php';
 require_once __DIR__ . '/app/Controllers/PessoasController.php';
+require_once __DIR__ . '/app/Controllers/TiposAtendimentosController.php';
 
 $controller = $_GET['controller'] ?? 'home';
 $action = $_GET['action'] ?? 'index';
@@ -57,6 +58,35 @@ if ($controller === 'usuarios') {
             break;
         default:
             echo 'Ação de pessoas não encontrada.';
+            break;
+    }
+} elseif ($controller === 'tiposatendimentos') {
+
+    $tiposController = new TiposAtendimentosController();
+
+    switch ($action) {
+        case 'listar':
+            $tiposController->listar();
+            break;
+
+        case 'buscar':
+            $tiposController->buscarPorId();
+            break;
+
+        case 'criar':
+            $tiposController->criar();
+            break;
+
+        case 'atualizar':
+            $tiposController->atualizar();
+            break;
+
+        case 'excluir':
+            $tiposController->excluir();
+            break;
+
+        default:
+            echo 'Ação não encontrada.';
             break;
     }
 }
