@@ -37,7 +37,7 @@ class AuthController
         unset($_SESSION['erro_login'], $_SESSION['mensagem']);
 
         // Carrega a tela de login.
-        require __DIR__ . '/../../Views/auth/login.php';
+        require __DIR__ . '/../Views/auth/login.php';
     }
 
     public function entrar(): void
