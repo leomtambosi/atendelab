@@ -17,10 +17,6 @@ Funcionalidades previstas
 * Página pública
 * Login
 * Dashboard
-* Cadastro de pessoas atendidas
-* Cadastro de tipos de atendimento
-* Registro de atendimentos
-* Relatórios
 
 Como executar localmente
 
@@ -41,3 +37,8 @@ Acesso ao Login
 3. Após a autenticação, o usuário será redirecionado para o Dashboard.
 
 4. Para encerrar a sessão, utilize o botão "Sair" disponível no canto superior da tela.
+
+Usuário de teste
+
+E-mail: admin@atendelab.com
+Senha: 123
