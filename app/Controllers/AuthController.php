@@ -123,7 +123,7 @@ class AuthController
         $usuario = usuarioAtual();
 
         // Carrega a página interna.
-        require __DIR__ . '/../../Views/dashboard/index.php';
+        require __DIR__ . '/../Views/dashboard/index.php';
     }
 
     public function logout(): void

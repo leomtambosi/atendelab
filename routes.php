@@ -119,10 +119,7 @@ if ($controller === 'usuarios') {
             break;
     }
 }
-else {
-    echo '<h1>Atendelab</h1>';
-    echo '<p>Projeto em execução. Use ?controller=usuario&action=listar para testar.</p>';
-}
+
 
 switch ($controller) {
     case 'auth':

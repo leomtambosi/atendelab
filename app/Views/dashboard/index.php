@@ -8,7 +8,37 @@
     <title>Dashboard - AtendeLab</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+    body {
+        background-color: #8ab6eb;
+    }
+
+    .navbar {
+        background-color: #ff0000 !important;
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+
+    .card-body {
+        padding: 35px;
+    }
+
+    h1 {
+        color: #0d6efd;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .btn-primary {
+        padding: 10px 20px;
+        border-radius: 8px;
+    }
+</style>
 </head>
+
 
 <body class="bg-light">
 
@@ -47,9 +77,27 @@
                     ) ?>
                 </p>
 
+                <?php if ($usuario['perfil'] === 'admin'): ?>
+                    <div class="alert alert-success">
+                        <strong>Painel Administrativo</strong><br>
+                         Você possui acesso completo ao sistema.
+                    </div>
+                <?php endif; ?>
+
                 <a class="btn btn-primary" href="?controller=usuarios&action=listar">
                     Testar rota protegida de usuarios
                 </a>
+
+                <hr>
+
+                <h5>Módulos que serão desenvolvidos futuramente</h5>
+
+                <ul>
+                    <li>Cadastro de Pessoas</li>
+                    <li>Cadastro de Usuários</li>
+                    <li>Tipos de Atendimento</li>
+                    <li>Controle de Atendimentos</li>
+                </ul>
             </div>
         </div>
     </div>
