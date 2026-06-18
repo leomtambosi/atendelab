@@ -93,6 +93,10 @@ switch ($controller) {
                 $pessoasController->atualizar();
                 break;
 
+            case 'inativar':
+                $pessoasController->inativar();
+                break;
+
             case 'excluir':
                 $pessoasController->excluir();
                 break;
@@ -123,6 +127,10 @@ switch ($controller) {
 
             case 'atualizar':
                 $tiposController->atualizar();
+                break;
+
+            case 'inativar':
+                $tiposController->inativar();
                 break;
 
             case 'excluir':

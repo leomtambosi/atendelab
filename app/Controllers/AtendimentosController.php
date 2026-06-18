@@ -6,8 +6,7 @@ class AtendimentosController
 
     public function __construct()
     {
-        require_once __DIR__ . '/../../config/database.php';
-        $this->pdo = $pdo;
+        $this->pdo = require __DIR__ . '/../../config/database.php';
     }
 
     public function listar(): void
@@ -21,9 +20,12 @@ class AtendimentosController
                 t.nome AS tipo_atendimento,
                 u.nome AS usuario,
                 a.descricao,
+                a.data_atendimento,
+                a.horario_atendimento,
                 a.observacao_final,
                 a.status,
-                a.criado_em
+                a.criado_em,
+                a.atualizado_em
             FROM atendimentos a
             INNER JOIN pessoas p ON a.pessoa_id = p.id
             INNER JOIN tipos_atendimentos t ON a.tipo_atendimento_id = t.id
@@ -97,6 +99,9 @@ class AtendimentosController
     $status = trim($_POST['status'] ?? 'aberto');
     $observacao_final = trim($_POST['observacao_final'] ?? '');
 
+    $data_atendimento = trim($_POST['data_atendimento'] ?? '');
+    $horario_atendimento = trim($_POST['horario_atendimento'] ?? '');
+
     if (
         !$pessoa_id ||
         !$tipo_atendimento_id ||
@@ -122,6 +127,8 @@ class AtendimentosController
                 usuario_id,
                 descricao,
                 observacao_final,
+                data_atendimento,
+                horario_atendimento,
                 status
             )
             VALUES
@@ -131,6 +138,8 @@ class AtendimentosController
                 :usuario_id,
                 :descricao,
                 :observacao_final,
+                :data_atendimento,
+                :horario_atendimento,
                 :status
             )
         ";
@@ -143,6 +152,8 @@ class AtendimentosController
         $stmt->bindValue(':descricao', $descricao);
         $stmt->bindValue(':observacao_final', $observacao_final);
         $stmt->bindValue(':status', $status);
+        $stmt->bindValue(':data_atendimento', $data_atendimento);
+        $stmt->bindValue(':horario_atendimento', $horario_atendimento);
 
         $stmt->execute();
 
@@ -158,8 +169,9 @@ class AtendimentosController
         http_response_code(500);
 
         echo json_encode([
-            'erro' => 'Erro ao criar atendimento.'
-        ]);
+            'erro' => 'Erro ao criar atendimento.',
+            'detalhes' => $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
     }
 }
 
@@ -170,6 +182,9 @@ class AtendimentosController
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         $status = trim($_POST['status'] ?? '');
         $observacao_final = trim($_POST['observacao_final'] ?? '');
+        $data_atendimento = trim($_POST['data_atendimento'] ?? '');
+        $horario_atendimento = trim($_POST['horario_atendimento'] ?? '');
+
 
         if (!$id || $status === '') {
 
@@ -188,7 +203,10 @@ class AtendimentosController
                 UPDATE atendimentos
                 SET
                     status = :status,
-                    observacao_final = :observacao_final
+                    observacao_final = :observacao_final,
+                    data_atendimento = :data_atendimento,
+                    horario_atendimento = :horario_atendimento,
+                    atualizado_em = NOW()
                 WHERE id = :id
             ";
 
@@ -197,6 +215,8 @@ class AtendimentosController
             $stmt->bindValue(':status', $status);
             $stmt->bindValue(':observacao_final', $observacao_final);
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':data_atendimento', $data_atendimento);
+            $stmt->bindValue(':horario_atendimento', $horario_atendimento);
 
             $stmt->execute();
 

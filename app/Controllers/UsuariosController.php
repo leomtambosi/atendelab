@@ -10,23 +10,29 @@ class UsuariosController
         $this->pdo = $pdo;
     }
 
+    // LISTAR TODOS OS USUÁRIOS
     public function listar(): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        $sql = 'SELECT id, nome, email, perfil, status, criado_em
+        $sql = 'SELECT 
+                    id, 
+                    nome, 
+                    email, 
+                    perfil, 
+                    status, 
+                    criado_em,
+                    atualizado_em
                 FROM usuarios
                 ORDER BY id DESC';
 
         $stmt = $this->pdo->query($sql);
         $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        echo json_encode(
-            $usuarios,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
-        );
+        echo json_encode($usuarios, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
+    // BUSCAR USUÁRIO POR ID
     public function buscarPorId(): void
     {
         header('Content-Type: application/json; charset=utf-8');
@@ -39,9 +45,17 @@ class UsuariosController
             return;
         }
 
-        $sql = 'SELECT id, nome, email, perfil, status, criado_em
+        $sql = 'SELECT 
+                    id, 
+                    nome, 
+                    email, 
+                    perfil, 
+                    status, 
+                    criado_em,
+                    atualizado_em
                 FROM usuarios
-                WHERE id = :id';
+                WHERE id = :id
+                LIMIT 1';
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
@@ -55,12 +69,10 @@ class UsuariosController
             return;
         }
 
-        echo json_encode(
-            $usuario,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
-        );
+        echo json_encode($usuario, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
+    // CRIAR USUÁRIO
     public function criar(): void
     {
         header('Content-Type: application/json; charset=utf-8');
@@ -100,15 +112,19 @@ class UsuariosController
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
         try {
-            $sql = 'INSERT INTO usuarios (nome, email, senha, perfil, status)
-                    VALUES (:nome, :email, :senha, :perfil, :status)';
+            $sql = 'INSERT INTO usuarios 
+                    (nome, email, senha, perfil, status, criado_em, atualizado_em)
+                    VALUES 
+                    (:nome, :email, :senha, :perfil, :status, NOW(), NOW())';
 
             $stmt = $this->pdo->prepare($sql);
+
             $stmt->bindValue(':nome', $nome);
             $stmt->bindValue(':email', $email);
             $stmt->bindValue(':senha', $senhaHash);
             $stmt->bindValue(':perfil', $perfil);
             $stmt->bindValue(':status', $status);
+
             $stmt->execute();
 
             http_response_code(201);
@@ -126,6 +142,7 @@ class UsuariosController
         }
     }
 
+    // ATUALIZAR USUÁRIO
     public function atualizar(): void
     {
         header('Content-Type: application/json; charset=utf-8');
@@ -167,15 +184,18 @@ class UsuariosController
                     SET nome = :nome,
                         email = :email,
                         perfil = :perfil,
-                        status = :status
+                        status = :status,
+                        atualizado_em = NOW()
                     WHERE id = :id';
 
             $stmt = $this->pdo->prepare($sql);
+
             $stmt->bindValue(':nome', $nome);
             $stmt->bindValue(':email', $email);
             $stmt->bindValue(':perfil', $perfil);
             $stmt->bindValue(':status', $status);
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
             $stmt->execute();
 
             echo json_encode([
@@ -190,6 +210,7 @@ class UsuariosController
         }
     }
 
+    // EXCLUIR USUÁRIO
     public function excluir(): void
     {
         header('Content-Type: application/json; charset=utf-8');
