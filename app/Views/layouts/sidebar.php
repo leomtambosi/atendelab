@@ -1,18 +1,5 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Proteção da página: se não houver usuário logado, redireciona para o login
-if (empty($_SESSION['usuario_id'])) {
-    header('Location: ' . $baseUrl . '?controller=auth&action=entrar');
-    exit;
-}
-
-// Recupera dados do usuário para verificar o perfil (administrador)
-$usuario = $_SESSION['usuario'] ?? [];
-
-// Identifica o controller atual para aplicar a classe 'active' no menu
+// Identifica o controller atual para aplicar a classe 'active' no menu lateral
 $controllerAtual = $_GET['controller'] ?? 'frontend';
 $actionAtual = $_GET['action'] ?? 'dashboard';
 
@@ -20,6 +7,9 @@ $actionAtual = $_GET['action'] ?? 'dashboard';
 if ($controllerAtual === 'frontend') {
     $controllerAtual = $actionAtual;
 }
+
+// Recupera dados do usuário para verificar o perfil (administrador)
+$usuario = $_SESSION['usuario'] ?? [];
 ?>
 <aside class="sidebar" id="sidebar">
     <div class="brand">
@@ -63,3 +53,5 @@ if ($controllerAtual === 'frontend') {
         <i class="bi bi-box-arrow-left"></i> Sair
     </a>
 </aside>
+
+<main class="app-content p-4">

@@ -20,7 +20,7 @@ $perfilUsuario = htmlspecialchars( (string) ($usuarioLogado['perfil'] ?? ''), EN
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-semibold" href="<?= $baseUrl ?>?controller=auth&action=dashboard">
+        <a class="navbar-brand fw-semibold" href="<?= $baseUrl ?>?controller=frontend&action=dashboard">
             AtendeLab
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
@@ -28,17 +28,17 @@ $perfilUsuario = htmlspecialchars( (string) ($usuarioLogado['perfil'] ?? ''), EN
         </button>
         <div class="collapse navbar-collapse" id="menuPrincipal">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-link">
-                    <a class="nav-link" href="<?= $baseUrl ?>?controller=auth&action=dashboard">Dashboard</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="/atendelab/public/?controller=frontend&action=dashboard">Dashboard</a>
                 </li>
-                <li class="nav-link">
-                    <a class="nav-link" href="<?= $baseUrl ?>?controller=frontend&action=pessoas">Pessoas</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="/atendelab/public/?controller=frontend&action=pessoas">Pessoas</a>
                 </li>
-                <li class="nav-link">
-                    <a class="nav-link" href="<?= $baseUrl ?>?controller=frontend&action=tipos">Tipos</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="/atendelab/public/?controller=frontend&action=tipos">Tipos</a>
                 </li>
-                <li class="nav-link">
-                    <a class="nav-link" href="<?= $baseUrl ?>?controller=frontend&action=atendimentos">Atendimentos</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="/atendelab/public/?controller=frontend&action=atendimentos">Atendimentos</a>
                 </li>
             </ul>
             <div class="d-flex align-items-center gap-3">

@@ -5,12 +5,58 @@ require_once __DIR__ . '/app/Controllers/PessoasController.php';
 require_once __DIR__ . '/app/Controllers/TiposAtendimentosController.php';
 require_once __DIR__ . '/app/Controllers/AtendimentosController.php';
 require_once __DIR__ . '/app/Controllers/AuthController.php';
+// IMPORTANTE: Adiciona os novos controladores que gerenciam as telas visuais
+require_once __DIR__ . '/app/Controllers/FrontendController.php';
+require_once __DIR__ . '/app/Controllers/RelatoriosController.php';
 require_once __DIR__ . '/app/Middleware/auth.php';
 
 $controller = $_GET['controller'] ?? 'auth';
 $action = $_GET['action'] ?? 'login';
 
 switch ($controller) {
+
+    // NOVO CASO: Trata o redirecionamento das páginas visuais sem sidebar
+    // LOCALIZADO NO SEU ROUTES.PHP
+    // CASO FRONTEND TOTALMENTE CORRIGIDO:
+    case 'frontend':
+        exigirAutenticacao();
+
+        switch ($action) {
+            case 'dashboard':
+                require_once __DIR__ . '/app/Views/dashboard/index.php';
+                break;
+
+            case 'pessoas':
+                require_once __DIR__ . '/app/Views/pessoas/index.php';
+                break;
+
+            case 'tipos': 
+                require_once __DIR__ . '/app/Views/tipos-atendimentos/index.php';
+                break;
+
+            case 'atendimentos':
+                require_once __DIR__ . '/app/Views/atendimentos/index.php';
+                break;
+
+            default:
+                http_response_code(404);
+                echo 'Página visual não encontrada no frontend.';
+        }
+        break;
+    case 'relatorios':
+        exigirAutenticacao();
+        $relatoriosController = new RelatoriosController();
+
+        switch ($action) {
+            case 'estatisticas':
+                $relatoriosController->estatisticas();
+                break;
+
+            default:
+                http_response_code(404);
+                echo 'Ação de relatório não encontrada.';
+        }
+        break;
 
     case 'auth':
         $authController = new AuthController();
@@ -26,7 +72,7 @@ switch ($controller) {
 
             case 'dashboard':
                 exigirAutenticacao();
-                $authController->dashboard();
+                require_once __DIR__ . '/app/Views/dashboard/index.php';
                 break;
 
             case 'logout':
