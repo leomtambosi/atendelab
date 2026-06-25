@@ -32,8 +32,8 @@ require __DIR__ . '/../layouts/header.php';
                 </div>
                 
                 <div class="col-md-4">
-                    <label class="form-label">Documento *</label>
-                    <input class="form-control" type="text" name="documento" id="pessoaDocumento" required>
+                    <label class="form-label">CPF *</label>
+                    <input class="form-control" type="text" name="cpf" id="pessoaDocumento" required>
                 </div>
                 
                 <div class="col-md-4">
@@ -89,7 +89,7 @@ require __DIR__ . '/../layouts/header.php';
                 <tr>
                     <th>ID</th>
                     <th>Nome</th>
-                    <th>Documento</th>
+                    <th>CPF</th>
                     <th>E-mail</th>
                     <th>Curso</th>
                     <th>Período</th>
@@ -149,13 +149,13 @@ async function carregarPessoas() {
         }
         
         tbody.innerHTML = pessoas.map(pessoa => {
-            const badgeClass = pessoa.status === 'inativo' ? 'text-bg-danger' : 'text-bg-success';
+            const badgeClass = Math.abs(pessoa.status) === 0 || pessoa.status === 'inativo' ? 'text-bg-danger' : 'text-bg-success';
             
             return `
                 <tr>
                     <td>${AtendeLabApi.escape(pessoa.id)}</td>
                     <td class="fw-semibold">${AtendeLabApi.escape(pessoa.nome)}</td>
-                    <td>${AtendeLabApi.escape(pessoa.documento || '-')}</td>
+                    <td>${AtendeLabApi.escape(pessoa.cpf || pessoa.documento || '-')}</td>
                     <td>${AtendeLabApi.escape(pessoa.email)}</td>
                     <td>${AtendeLabApi.escape(pessoa.curso || '-')}</td>
                     <td>${AtendeLabApi.escape(pessoa.periodo || '-')}</td>
@@ -169,7 +169,7 @@ async function carregarPessoas() {
                             <button class="btn btn-sm btn-outline-primary" onclick="editarPessoa(${Number(pessoa.id)})">
                                 Editar
                             </button>
-                            ${pessoa.status !== 'inativo' ? `
+                            ${pessoa.status !== 'inativo' && pessoa.status !== '0' ? `
                                 <button class="btn btn-sm btn-outline-danger" onclick="inativarPessoa(${Number(pessoa.id)})">
                                     Inativar
                                 </button>
@@ -193,7 +193,8 @@ async function editarPessoa(id) {
         formTitulo.textContent = 'Editar pessoa';
         document.getElementById('pessoaId').value = pessoa.id;
         document.getElementById('pessoaNome').value = pessoa.nome;
-        document.getElementById('pessoaDocumento').value = pessoa.documento;
+        // Preenche com o campo cpf vindo do banco
+        document.getElementById('pessoaDocumento').value = pessoa.cpf || pessoa.documento || '';
         document.getElementById('pessoaTelefone').value = pessoa.telefone || '';
         document.getElementById('pessoaEmail').value = pessoa.email;
         document.getElementById('pessoaCurso').value = pessoa.curso || '';
@@ -220,11 +221,36 @@ formPessoa.addEventListener('submit', async event => {
     const acao = id ? 'atualizar' : 'criar';
     const mensagemSucesso = id ? 'Dados atualizados com sucesso.' : 'Pessoa cadastrada com sucesso.';
     
+    const nome = document.getElementById('pessoaNome').value;
+    const documento = document.getElementById('pessoaDocumento').value;
+    const telefone = document.getElementById('pessoaTelefone').value;
+    const email = document.getElementById('pessoaEmail').value;
+    const curso = document.getElementById('pessoaCurso').value;
+    const periodo = document.getElementById('pessoaPeriodo').value;
+    const observacoes = document.getElementById('pessoaObservacoes').value;
+    const status = document.getElementById('pessoaStatus').value;
+
+    // Payload estruturado com o campo 'cpf' mapeado corretamente
+    const dadosPayload = {
+        id: id,
+        nome: nome,
+        email: email,
+        telefone: telefone,
+        periodo: periodo,
+        observacoes: observacoes,
+        status: status,
+        cpf: documento, // Envia como cpf para o PHP ler corretamente
+        documento: documento,
+        identificador: documento,
+        curso: curso,
+        vinculo: curso
+    };
+    
     try {
         await AtendeLabApi.post(
             'pessoas',
             acao,
-            new FormData(formPessoa)
+            dadosPayload
         );
         
         AtendeLabApi.showAlert('alerta', mensagemSucesso, 'success');
@@ -232,7 +258,7 @@ formPessoa.addEventListener('submit', async event => {
         await carregarPessoas();
         
     } catch (error) {
-        AtendeLabApi.showAlert('alerta', error.message, 'danger');
+        AtendeLabApi.showAlert('alerta', 'Erro ao salvar: ' + error.message, 'danger');
     }
 });
 
@@ -256,6 +282,8 @@ document.addEventListener('DOMContentLoaded', carregarPessoas);
 </script>
 
 </main> 
+
+<script src="/atendelab/assets/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
