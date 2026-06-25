@@ -1,83 +1,105 @@
 <?php
-$baseUrl = '/atendelab/public/';
 $tituloPagina = 'Dashboard';
-
-// Carrega apenas o cabeçalho superior (barra verde)
-require_once __DIR__ . '/../layouts/header.php';
+require __DIR__ . '/../layouts/header.php';
 ?>
 
-<div class="container py-4">
-    
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-        <div>
-            <h1 class="h3 mb-1">Dashboard</h1>
-            <p class="text-secondary mb-0">Resumo simples para validar a integração com o backend.</p>
-        </div>
-    </div>
+<div class="mb-4">
+    <h1 class="h3 mb-1">Dashboard</h1>
+    <p class="text-secondary mb-0">Resumo simples para validar a integração com o backend.</p>
+</div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-4">
-                    <div class="text-secondary small mb-1">Pessoas cadastradas</div>
-                    <div class="display-5 fw-semibold" id="totalPessoas">-</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-4">
-                    <div class="text-secondary small mb-1">Tipos de atendimento</div>
-                    <div class="display-5 fw-semibold" id="totalTipos">-</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body py-4">
-                    <div class="text-secondary small mb-1">Atendimentos registrados</div>
-                    <div class="display-5 fw-semibold" id="totalAtendimentos">-</div>
-                </div>
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-secondary small mb-1">Pessoas cadastradas</p>
+                <h2 class="display-5 fw-bold mb-0" id="totalPessoas">...</h2>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <h2 class="h5 mb-2">Acesso rápido</h2>
-            <p class="text-secondary mb-4">Use os módulos abaixo para cadastrar e consultar dados reais do banco.</p>
-            
-            <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-success" href="<?= $baseUrl ?>?controller=frontend&action=pessoas">Gerenciar pessoas</a>
-                <a class="btn btn-outline-success" href="<?= $baseUrl ?>?controller=frontend&action=tipos">Gerenciar tipos</a>
-                <a class="btn btn-outline-success" href="<?= $baseUrl ?>?controller=frontend&action=atendimentos">Registrar atendimentos</a>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-secondary small mb-1">Tipos de atendimento</p>
+                <h2 class="display-5 fw-bold mb-0" id="totalTipos">...</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-secondary small mb-1">Atendimentos registrados</p>
+                <h2 class="display-5 fw-bold mb-0" id="totalAtendimentos">...</h2>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', async () => {
-    const targets = {
-        pessoas: document.getElementById('totalPessoas'),
-        tipos: document.getElementById('totalTipos'),
-        atendimentos: document.getElementById('totalAtendimentos')
-    };
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title fw-semibold mb-1">Acesso rápido</h5>
+        <p class="card-text text-secondary small mb-3">
+            Use os módulos abaixo para cadastrar e consultar dados reais do banco.
+        </p>
+        
+        <div class="d-flex flex-wrap gap-2">
+            <a href="?controller=frontend&action=pessoas" class="btn btn-success px-3">
+                Gerenciar pessoas
+            </a>
+            <a href="?controller=frontend&action=tipos" class="btn btn-outline-success px-3">
+                Gerenciar tipos
+            </a>
+            <a href="?controller=frontend&action=atendimentos" class="btn btn-outline-success px-3">
+                Registrar atendimentos
+            </a>
+        </div>
+    </div>
+</div>
 
-    for (const [controller, element] of Object.entries(targets)) {
-        try {
-            if (typeof AtendeLabApi !== 'undefined') {
-                const response = await AtendeLabApi.get(controller, 'listar');
-                element.textContent = AtendeLabApi.toList(response).length;
-            } else {
-                element.textContent = '0';
-            }
-        } catch (error) {
-            element.textContent = '!';
-            element.title = error.message;
+<script>
+async function carregarDadosDashboard() {
+    try {
+        const resposta = await AtendeLabApi.get('relatorios', 'estatisticas');
+        const dados = resposta.dados || resposta;
+        
+        if (dados.pessoas !== undefined) {
+            document.getElementById('totalPessoas').textContent = dados.pessoas;
+            document.getElementById('totalTipos').textContent = dados.tipos || 0;
+            document.getElementById('totalAtendimentos').textContent = dados.atendimentos || 0;
+        } else {
+            await processarContagemAutomatica();
         }
+    } catch (error) {
+        console.warn('Recorrendo à contagem automática:', error);
+        await processarContagemAutomatica();
     }
-});
+}
+
+async function processarContagemAutomatica() {
+    try {
+        const resPessoas = await AtendeLabApi.get('pessoas', 'listar');
+        document.getElementById('totalPessoas').textContent = AtendeLabApi.toList(resPessoas).length;
+    } catch (e) { document.getElementById('totalPessoas').textContent = '0'; }
+
+    try {
+        const resTipos = await AtendeLabApi.get('tipos', 'listar');
+        document.getElementById('totalTipos').textContent = AtendeLabApi.toList(resTipos).length;
+    } catch (e) { document.getElementById('totalTipos').textContent = '0'; }
+
+    try {
+        const resAtendimentos = await AtendeLabApi.get('atendimentos', 'listar');
+        document.getElementById('totalAtendimentos').textContent = AtendeLabApi.toList(resAtendimentos).length;
+    } catch (e) { document.getElementById('totalAtendimentos').textContent = '0'; }
+}
+
+document.addEventListener('DOMContentLoaded', carregarDadosDashboard);
 </script>
+
+</main> 
+
+<script src="/atendelab/assets/js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -187,13 +187,15 @@ async function carregarPessoas() {
 
 async function editarPessoa(id) {
     try {
-        const resposta = await AtendeLabApi.get('pessoas', 'obter', { id });
+        // CORREÇÃO DA BUSCA: Garante o envio do parâmetro ID para obter os dados atuais da pessoa
+        const resposta = await AtendeLabApi.get('pessoas', 'buscar', { id: id });
         const pessoa = resposta.dados || resposta;
         
         formTitulo.textContent = 'Editar pessoa';
+        
+        // Alimenta o formulário com o ID e os dados vindo do banco
         document.getElementById('pessoaId').value = pessoa.id;
         document.getElementById('pessoaNome').value = pessoa.nome;
-        // Preenche com o campo cpf vindo do banco
         document.getElementById('pessoaDocumento').value = pessoa.cpf || pessoa.documento || '';
         document.getElementById('pessoaTelefone').value = pessoa.telefone || '';
         document.getElementById('pessoaEmail').value = pessoa.email;
@@ -210,7 +212,7 @@ async function editarPessoa(id) {
         });
         
     } catch (error) {
-        AtendeLabApi.showAlert('alerta', error.message, 'danger');
+        AtendeLabApi.showAlert('alerta', 'Erro ao carregar dados para edição: ' + error.message, 'danger');
     }
 }
 
@@ -230,7 +232,6 @@ formPessoa.addEventListener('submit', async event => {
     const observacoes = document.getElementById('pessoaObservacoes').value;
     const status = document.getElementById('pessoaStatus').value;
 
-    // Payload estruturado com o campo 'cpf' mapeado corretamente
     const dadosPayload = {
         id: id,
         nome: nome,
@@ -239,18 +240,20 @@ formPessoa.addEventListener('submit', async event => {
         periodo: periodo,
         observacoes: observacoes,
         status: status,
-        cpf: documento, // Envia como cpf para o PHP ler corretamente
+        cpf: documento,
         documento: documento,
-        identificador: documento,
         curso: curso,
         vinculo: curso
     };
     
     try {
+        // Envia a ação correta ('criar' ou 'atualizar') com o payload estruturado
+        // Passamos também o { id } como terceiro parâmetro de query string para prevenir restrições de rotas de atualização do PHP
         await AtendeLabApi.post(
             'pessoas',
             acao,
-            dadosPayload
+            dadosPayload,
+            id ? { id: id } : {}
         );
         
         AtendeLabApi.showAlert('alerta', mensagemSucesso, 'success');
