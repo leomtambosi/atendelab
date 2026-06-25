@@ -338,4 +338,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 
-<?php require __DIR__ . '/../layouts/footer.php'; ?>
+<?php require __DIR__ . '/../layouts/sidebar.php'; ?>
