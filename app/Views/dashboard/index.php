@@ -60,38 +60,42 @@ require __DIR__ . '/../layouts/header.php';
 
 <script>
 async function carregarDadosDashboard() {
-    try {
-        const resposta = await AtendeLabApi.get('relatorios', 'estatisticas');
-        const dados = resposta.dados || resposta;
-        
-        if (dados.pessoas !== undefined) {
-            document.getElementById('totalPessoas').textContent = dados.pessoas;
-            document.getElementById('totalTipos').textContent = dados.tipos || 0;
-            document.getElementById('totalAtendimentos').textContent = dados.atendimentos || 0;
-        } else {
-            await processarContagemAutomatica();
-        }
-    } catch (error) {
-        console.warn('Recorrendo à contagem automática:', error);
-        await processarContagemAutomatica();
-    }
-}
-
-async function processarContagemAutomatica() {
+    // 1. Contagem de Pessoas
     try {
         const resPessoas = await AtendeLabApi.get('pessoas', 'listar');
         document.getElementById('totalPessoas').textContent = AtendeLabApi.toList(resPessoas).length;
-    } catch (e) { document.getElementById('totalPessoas').textContent = '0'; }
+    } catch (e) { 
+        document.getElementById('totalPessoas').textContent = '0'; 
+    }
 
-    try {
-        const resTipos = await AtendeLabApi.get('tipos', 'listar');
-        document.getElementById('totalTipos').textContent = AtendeLabApi.toList(resTipos).length;
-    } catch (e) { document.getElementById('totalTipos').textContent = '0'; }
+    // 2. Contagem de Tipos (Com Autodetecção Inteligente de Rota)
+    let tiposCarregados = false;
+    const possiveisRotasTipos = ['tipos-atendimentos', 'tipos', 'tiposatendimentos'];
+    
+    for (const rota of possiveisRotasTipos) {
+        try {
+            const resTipos = await AtendeLabApi.get(rota, 'listar');
+            // Converte com segurança para lista (tratando se vier dentro de resTipos.dados ou direto)
+            const listaTipos = AtendeLabApi.toList(resTipos);
+            
+            document.getElementById('totalTipos').textContent = listaTipos.length;
+            tiposCarregados = true;
+            break; // Se funcionou, sai do laço
+        } catch (e) {
+            // Ignora o erro e testa a próxima variação de rota
+        }
+    }
+    if (!tiposCarregados) {
+        document.getElementById('totalTipos').textContent = '0';
+    }
 
+    // 3. Contagem de Atendimentos
     try {
         const resAtendimentos = await AtendeLabApi.get('atendimentos', 'listar');
         document.getElementById('totalAtendimentos').textContent = AtendeLabApi.toList(resAtendimentos).length;
-    } catch (e) { document.getElementById('totalAtendimentos').textContent = '0'; }
+    } catch (e) { 
+        document.getElementById('totalAtendimentos').textContent = '0'; 
+    }
 }
 
 document.addEventListener('DOMContentLoaded', carregarDadosDashboard);
