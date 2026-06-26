@@ -1,12 +1,13 @@
 <?php
 // app/Controllers/AtendimentosController.php
+
 class AtendimentosController
 {
     private PDO $pdo;
 
     public function __construct()
     {
-         global $pdo;
+        global $pdo;
         if (!isset($pdo)) {
             die('Erro: $pdo não foi definido em database.php');
         }
@@ -25,8 +26,7 @@ class AtendimentosController
     {
         $sql = 'SELECT a.id, p.nome AS pessoa_nome, t.nome AS tipo_nome,
                        u.nome AS responsavel_nome, a.descricao, a.status,
-                       a.data_atendimento, a.horario_atendimento, a.observacao_final,
-                       a.pessoa_id, a.tipo_atendimento_id /* Incluídos IDs para o mapeamento da edição */
+                       a.data_atendimento, a.horario_atendimento, a.observacao_final
                 FROM atendimentos a
                 INNER JOIN pessoas p ON p.id = a.pessoa_id
                 INNER JOIN tipos_atendimentos t ON t.id = a.tipo_atendimento_id
@@ -63,7 +63,7 @@ class AtendimentosController
         $this->json($atendimento);
     }
 
-    // Criar um novo atendimento
+    // Criar um novo atendimento com trava para datas retroativas
     public function criar(): void
     {
         $pessoa_id           = filter_input(INPUT_POST, 'pessoa_id', FILTER_VALIDATE_INT);
@@ -76,12 +76,21 @@ class AtendimentosController
         // Pega o usuário da sessão
         $usuario_id = $_SESSION['usuario']['id'] ?? null;
 
+        // 1. Validação de campos obrigatórios básicos
         if (!$pessoa_id || !$tipo_id || !$usuario_id || $descricao === '' || $data_atendimento === '' || $horario_atendimento === '') {
             $this->json(['erro' => 'Todos os campos obrigatórios devem ser preenchidos.'], 422);
             return;
         }
+        
         if (!in_array($status, ['aberto', 'em_andamento', 'concluido'], true)) {
             $this->json(['erro' => 'Status inicial inválido.'], 422);
+            return;
+        }
+
+        // 2. Trava de segurança no Backend: Impede datas passadas
+        $hoje = date('Y-m-d');
+        if ($data_atendimento < $hoje) {
+            $this->json(['erro' => 'Não é permitido registrar atendimentos em datas passadas.'], 400);
             return;
         }
 
@@ -108,58 +117,7 @@ class AtendimentosController
         }
     }
 
-    public function editar(): void
-    {
-        $id                  = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        $pessoa_id           = filter_input(INPUT_POST, 'pessoa_id', FILTER_VALIDATE_INT);
-        $tipo_id             = filter_input(INPUT_POST, 'tipo_atendimento_id', FILTER_VALIDATE_INT);
-        $descricao           = trim($_POST['descricao'] ?? '');
-        $data_atendimento    = $_POST['data_atendimento'] ?? '';
-        $horario_atendimento = $_POST['horario_atendimento'] ?? '';
-        $status              = $_POST['status'] ?? '';
-
-        if (!$id) {
-            $this->json(['erro' => 'ID do atendimento não foi fornecido ou é inválido.'], 422);
-            return;
-        }
-
-        if (!$pessoa_id || !$tipo_id || $descricao === '' || $data_atendimento === '' || $horario_atendimento === '' || $status === '') {
-            $this->json(['erro' => 'Todos os campos obrigatórios devem ser preenchidos para salvar as alterações.'], 422);
-            return;
-        }
-
-        if (!in_array($status, ['aberto', 'em_andamento', 'concluido'], true)) {
-            $this->json(['erro' => 'Status inválido.'], 422);
-            return;
-        }
-
-        try {
-            $sql = 'UPDATE atendimentos 
-                    SET pessoa_id = :pessoa_id,
-                        tipo_atendimento_id = :tipo_id,
-                        descricao = :descricao,
-                        data_atendimento = :data_atendimento,
-                        horario_atendimento = :horario_atendimento,
-                        status = :status
-                    WHERE id = :id';
-                    
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                'id'                  => $id,
-                'pessoa_id'           => $pessoa_id,
-                'tipo_id'             => $tipo_id,
-                'descricao'           => $descricao,
-                'data_atendimento'    => $data_atendimento,
-                'horario_atendimento' => $horario_atendimento,
-                'status'              => $status
-            ]);
-
-            $this->json(['mensagem' => 'Atendimento e status atualizados com sucesso.']);
-        } catch (PDOException $e) {
-            $this->json(['erro' => 'Erro ao salvar alterações no banco de dados.'], 400);
-        }
-    }
-
+    // Alterar status (e opcionalmente observação final)
     public function alterarStatus(): void
     {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
