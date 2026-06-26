@@ -1,236 +1,194 @@
 <?php
-
+// app/Controllers/AtendimentosController.php
 class AtendimentosController
 {
     private PDO $pdo;
 
     public function __construct()
     {
-        $this->pdo = require __DIR__ . '/../../config/database.php';
+         global $pdo;
+        if (!isset($pdo)) {
+            die('Erro: $pdo não foi definido em database.php');
+        }
+        $this->pdo = $pdo;
     }
 
+    private function json(array $dados, int $status = 200): void
+    {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($dados, JSON_UNESCAPED_UNICODE);
+    }
+
+    // Listagem com JOIN para exibir nomes em vez de IDs
     public function listar(): void
     {
-        header('Content-Type: application/json; charset=utf-8');
-
-        $sql = "
-            SELECT
-                a.id,
-                p.nome AS pessoa,
-                t.nome AS tipo_atendimento,
-                u.nome AS usuario,
-                a.descricao,
-                a.data_atendimento,
-                a.horario_atendimento,
-                a.observacao_final,
-                a.status,
-                a.criado_em,
-                a.atualizado_em
-            FROM atendimentos a
-            INNER JOIN pessoas p ON a.pessoa_id = p.id
-            INNER JOIN tipos_atendimentos t ON a.tipo_atendimento_id = t.id
-            INNER JOIN usuarios u ON a.usuario_id = u.id
-            ORDER BY a.id DESC
-        ";
-
+        $sql = 'SELECT a.id, p.nome AS pessoa_nome, t.nome AS tipo_nome,
+                       u.nome AS responsavel_nome, a.descricao, a.status,
+                       a.data_atendimento, a.horario_atendimento, a.observacao_final,
+                       a.pessoa_id, a.tipo_atendimento_id /* Incluídos IDs para o mapeamento da edição */
+                FROM atendimentos a
+                INNER JOIN pessoas p ON p.id = a.pessoa_id
+                INNER JOIN tipos_atendimentos t ON t.id = a.tipo_atendimento_id
+                INNER JOIN usuarios u ON u.id = a.usuario_id
+                ORDER BY a.id DESC';
         $stmt = $this->pdo->query($sql);
-        $atendimentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        echo json_encode(
-            $atendimentos,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
-        );
+        $this->json($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    public function visualizar(): void
+    // Buscar um atendimento específico por ID
+    public function buscarPorId(): void
     {
-        header('Content-Type: application/json; charset=utf-8');
-
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
         if (!$id) {
-            http_response_code(400);
-            echo json_encode(['erro' => 'ID inválido.']);
+            $this->json(['erro' => 'ID inválido.'], 400);
             return;
         }
 
-        $sql = "
-            SELECT
-                a.*,
-                p.nome AS pessoa,
-                t.nome AS tipo_atendimento,
-                u.nome AS usuario
-            FROM atendimentos a
-            INNER JOIN pessoas p ON a.pessoa_id = p.id
-            INNER JOIN tipos_atendimentos t ON a.tipo_atendimento_id = t.id
-            INNER JOIN usuarios u ON a.usuario_id = u.id
-            WHERE a.id = :id
-        ";
-
+        $sql = 'SELECT a.*, p.nome AS pessoa_nome, t.nome AS tipo_nome,
+                       u.nome AS responsavel_nome
+                FROM atendimentos a
+                INNER JOIN pessoas p ON p.id = a.pessoa_id
+                INNER JOIN tipos_atendimentos t ON t.id = a.tipo_atendimento_id
+                INNER JOIN usuarios u ON u.id = a.usuario_id
+                WHERE a.id = :id';
         $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
-
+        $stmt->execute(['id' => $id]);
         $atendimento = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$atendimento) {
-            http_response_code(404);
-            echo json_encode([
-                'erro' => 'Atendimento não encontrado.'
-            ]);
+            $this->json(['erro' => 'Atendimento não encontrado.'], 404);
             return;
         }
-
-        echo json_encode(
-            $atendimento,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
-        );
+        $this->json($atendimento);
     }
 
+    // Criar um novo atendimento
     public function criar(): void
-{
-    header('Content-Type: application/json; charset=utf-8');
-
-    $pessoa_id = filter_input(INPUT_POST, 'pessoa_id', FILTER_VALIDATE_INT);
-    $tipo_atendimento_id = filter_input(INPUT_POST, 'tipo_atendimento_id', FILTER_VALIDATE_INT);
-    $usuario_id = filter_input(INPUT_POST, 'usuario_id', FILTER_VALIDATE_INT);
-
-    $descricao = trim($_POST['descricao'] ?? '');
-    $status = trim($_POST['status'] ?? 'aberto');
-    $observacao_final = trim($_POST['observacao_final'] ?? '');
-
-    $data_atendimento = trim($_POST['data_atendimento'] ?? '');
-    $horario_atendimento = trim($_POST['horario_atendimento'] ?? '');
-
-    if (
-        !$pessoa_id ||
-        !$tipo_atendimento_id ||
-        !$usuario_id ||
-        $descricao === ''
-    ) {
-        http_response_code(400);
-
-        echo json_encode([
-            'erro' => 'Pessoa, tipo de atendimento, usuário e descrição são obrigatórios.'
-        ]);
-
-        return;
-    }
-
-    try {
-
-        $sql = "
-            INSERT INTO atendimentos
-            (
-                pessoa_id,
-                tipo_atendimento_id,
-                usuario_id,
-                descricao,
-                observacao_final,
-                data_atendimento,
-                horario_atendimento,
-                status
-            )
-            VALUES
-            (
-                :pessoa_id,
-                :tipo_atendimento_id,
-                :usuario_id,
-                :descricao,
-                :observacao_final,
-                :data_atendimento,
-                :horario_atendimento,
-                :status
-            )
-        ";
-
-        $stmt = $this->pdo->prepare($sql);
-
-        $stmt->bindValue(':pessoa_id', $pessoa_id, PDO::PARAM_INT);
-        $stmt->bindValue(':tipo_atendimento_id', $tipo_atendimento_id, PDO::PARAM_INT);
-        $stmt->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
-        $stmt->bindValue(':descricao', $descricao);
-        $stmt->bindValue(':observacao_final', $observacao_final);
-        $stmt->bindValue(':status', $status);
-        $stmt->bindValue(':data_atendimento', $data_atendimento);
-        $stmt->bindValue(':horario_atendimento', $horario_atendimento);
-
-        $stmt->execute();
-
-        http_response_code(201);
-
-        echo json_encode([
-            'mensagem' => 'Atendimento criado com sucesso.',
-            'id' => $this->pdo->lastInsertId()
-        ], JSON_UNESCAPED_UNICODE);
-
-    } catch (PDOException $e) {
-
-        http_response_code(500);
-
-        echo json_encode([
-            'erro' => 'Erro ao criar atendimento.',
-            'detalhes' => $e->getMessage()
-        ], JSON_UNESCAPED_UNICODE);
-    }
-}
-
-    public function atualizar(): void
     {
-        header('Content-Type: application/json; charset=utf-8');
+        $pessoa_id           = filter_input(INPUT_POST, 'pessoa_id', FILTER_VALIDATE_INT);
+        $tipo_id             = filter_input(INPUT_POST, 'tipo_atendimento_id', FILTER_VALIDATE_INT);
+        $descricao           = trim($_POST['descricao'] ?? '');
+        $data_atendimento    = $_POST['data_atendimento'] ?? '';
+        $horario_atendimento = $_POST['horario_atendimento'] ?? '';
+        $status              = $_POST['status'] ?? 'aberto';
 
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        $status = trim($_POST['status'] ?? '');
-        $observacao_final = trim($_POST['observacao_final'] ?? '');
-        $data_atendimento = trim($_POST['data_atendimento'] ?? '');
-        $horario_atendimento = trim($_POST['horario_atendimento'] ?? '');
+        // Pega o usuário da sessão
+        $usuario_id = $_SESSION['usuario']['id'] ?? null;
 
-
-        if (!$id || $status === '') {
-
-            http_response_code(400);
-
-            echo json_encode([
-                'erro' => 'ID e status são obrigatórios.'
-            ]);
-
+        if (!$pessoa_id || !$tipo_id || !$usuario_id || $descricao === '' || $data_atendimento === '' || $horario_atendimento === '') {
+            $this->json(['erro' => 'Todos os campos obrigatórios devem ser preenchidos.'], 422);
+            return;
+        }
+        if (!in_array($status, ['aberto', 'em_andamento', 'concluido'], true)) {
+            $this->json(['erro' => 'Status inicial inválido.'], 422);
             return;
         }
 
         try {
-
-            $sql = "
-                UPDATE atendimentos
-                SET
-                    status = :status,
-                    observacao_final = :observacao_final,
-                    data_atendimento = :data_atendimento,
-                    horario_atendimento = :horario_atendimento,
-                    atualizado_em = NOW()
-                WHERE id = :id
-            ";
-
+            $sql = 'INSERT INTO atendimentos
+                    (pessoa_id, tipo_atendimento_id, usuario_id, descricao,
+                     status, data_atendimento, horario_atendimento)
+                    VALUES
+                    (:pessoa_id, :tipo_id, :usuario_id, :descricao,
+                     :status, :data_atendimento, :horario_atendimento)';
             $stmt = $this->pdo->prepare($sql);
-
-            $stmt->bindValue(':status', $status);
-            $stmt->bindValue(':observacao_final', $observacao_final);
-            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-            $stmt->bindValue(':data_atendimento', $data_atendimento);
-            $stmt->bindValue(':horario_atendimento', $horario_atendimento);
-
-            $stmt->execute();
-
-            echo json_encode([
-                'mensagem' => 'Atendimento atualizado com sucesso.'
-            ], JSON_UNESCAPED_UNICODE);
-
-        } catch (PDOException $e) {
-
-            http_response_code(500);
-
-            echo json_encode([
-                'erro' => 'Erro ao atualizar atendimento.'
+            $stmt->execute([
+                'pessoa_id'           => $pessoa_id,
+                'tipo_id'             => $tipo_id,
+                'usuario_id'          => $usuario_id,
+                'descricao'           => $descricao,
+                'status'              => $status,
+                'data_atendimento'    => $data_atendimento,
+                'horario_atendimento' => $horario_atendimento
             ]);
+            $this->json(['mensagem' => 'Atendimento registrado com sucesso.'], 201);
+        } catch (PDOException $e) {
+            $this->json(['erro' => 'Erro ao registrar atendimento. Verifique se os IDs existem.'], 400);
+        }
+    }
+
+    public function editar(): void
+    {
+        $id                  = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $pessoa_id           = filter_input(INPUT_POST, 'pessoa_id', FILTER_VALIDATE_INT);
+        $tipo_id             = filter_input(INPUT_POST, 'tipo_atendimento_id', FILTER_VALIDATE_INT);
+        $descricao           = trim($_POST['descricao'] ?? '');
+        $data_atendimento    = $_POST['data_atendimento'] ?? '';
+        $horario_atendimento = $_POST['horario_atendimento'] ?? '';
+        $status              = $_POST['status'] ?? '';
+
+        if (!$id) {
+            $this->json(['erro' => 'ID do atendimento não foi fornecido ou é inválido.'], 422);
+            return;
+        }
+
+        if (!$pessoa_id || !$tipo_id || $descricao === '' || $data_atendimento === '' || $horario_atendimento === '' || $status === '') {
+            $this->json(['erro' => 'Todos os campos obrigatórios devem ser preenchidos para salvar as alterações.'], 422);
+            return;
+        }
+
+        if (!in_array($status, ['aberto', 'em_andamento', 'concluido'], true)) {
+            $this->json(['erro' => 'Status inválido.'], 422);
+            return;
+        }
+
+        try {
+            $sql = 'UPDATE atendimentos 
+                    SET pessoa_id = :pessoa_id,
+                        tipo_atendimento_id = :tipo_id,
+                        descricao = :descricao,
+                        data_atendimento = :data_atendimento,
+                        horario_atendimento = :horario_atendimento,
+                        status = :status
+                    WHERE id = :id';
+                    
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                'id'                  => $id,
+                'pessoa_id'           => $pessoa_id,
+                'tipo_id'             => $tipo_id,
+                'descricao'           => $descricao,
+                'data_atendimento'    => $data_atendimento,
+                'horario_atendimento' => $horario_atendimento,
+                'status'              => $status
+            ]);
+
+            $this->json(['mensagem' => 'Atendimento e status atualizados com sucesso.']);
+        } catch (PDOException $e) {
+            $this->json(['erro' => 'Erro ao salvar alterações no banco de dados.'], 400);
+        }
+    }
+
+    public function alterarStatus(): void
+    {
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $status = $_POST['status'] ?? '';
+        $observacao_final = trim($_POST['observacao_final'] ?? '');
+
+        if (!$id || !in_array($status, ['aberto', 'em_andamento', 'concluido'], true)) {
+            $this->json(['erro' => 'ID ou status inválido.'], 422);
+            return;
+        }
+        if ($status === 'concluido' && $observacao_final === '') {
+            $this->json(['erro' => 'Para concluir o atendimento, informe a observação final.'], 422);
+            return;
+        }
+
+        try {
+            $sql = 'UPDATE atendimentos
+                    SET status = :status,
+                        observacao_final = :observacao_final
+                    WHERE id = :id';
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([
+                'id' => $id,
+                'status' => $status,
+                'observacao_final' => $observacao_final ?: null
+            ]);
+            $this->json(['mensagem' => 'Status do atendimento atualizado com sucesso.']);
+        } catch (PDOException $e) {
+            $this->json(['erro' => 'Erro ao atualizar status.'], 400);
         }
     }
 }

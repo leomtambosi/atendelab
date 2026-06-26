@@ -14,8 +14,8 @@ $perfilUsuario = htmlspecialchars( (string) ($usuarioLogado['perfil'] ?? ''), EN
         <?= htmlspecialchars( $tituloPagina, ENT_QUOTES, 'UTF-8' ) ?> | AtendeLab
     </title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="<?= $baseUrl ?>assets/css/style.css">
-    <script src="<?= $baseUrl ?>assets/js/api.js"></script>
+    <link rel="stylesheet" href="/atendelab/assets/css/style.css">
+    <script src="/atendelab/assets/js/api.js"></script>
 </head>
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">

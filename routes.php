@@ -1,11 +1,11 @@
 <?php
+// routes.php
 
 require_once __DIR__ . '/app/Controllers/UsuariosController.php';
 require_once __DIR__ . '/app/Controllers/PessoasController.php';
 require_once __DIR__ . '/app/Controllers/TiposAtendimentosController.php';
 require_once __DIR__ . '/app/Controllers/AtendimentosController.php';
 require_once __DIR__ . '/app/Controllers/AuthController.php';
-// IMPORTANTE: Adiciona os novos controladores que gerenciam as telas visuais
 require_once __DIR__ . '/app/Controllers/FrontendController.php';
 require_once __DIR__ . '/app/Controllers/RelatoriosController.php';
 require_once __DIR__ . '/app/Middleware/auth.php';
@@ -15,9 +15,6 @@ $action = $_GET['action'] ?? 'login';
 
 switch ($controller) {
 
-    // NOVO CASO: Trata o redirecionamento das páginas visuais sem sidebar
-    // LOCALIZADO NO SEU ROUTES.PHP
-    // CASO FRONTEND TOTALMENTE CORRIGIDO:
     case 'frontend':
         exigirAutenticacao();
 
@@ -43,6 +40,7 @@ switch ($controller) {
                 echo 'Página visual não encontrada no frontend.';
         }
         break;
+
     case 'relatorios':
         exigirAutenticacao();
         $relatoriosController = new RelatoriosController();
@@ -209,6 +207,14 @@ switch ($controller) {
 
             case 'atualizar':
                 $atendimentosController->atualizar();
+                break;
+
+            case 'editar':
+                $atendimentosController->editar();
+                break;
+
+            case 'alterarStatus':
+                $atendimentosController->alterarStatus();
                 break;
 
             default:
