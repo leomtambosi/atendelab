@@ -150,7 +150,6 @@ function fecharFormulario() {
     configurarDataMinima();
 }
 
-// Configura o atributo min com a data atual (formato YYYY-MM-DD)
 function configurarDataMinima() {
     const inputData = document.querySelector('#formAtendimento input[name="data_atendimento"]');
     if (inputData) {
@@ -211,19 +210,16 @@ async function carregarAtendimentos() {
             const pessoa = labelRegistro(atendimento, 'pessoa_nome', 'pessoa');
             const tipo = labelRegistro(atendimento, 'tipo_nome', 'tipo_atendimento', 'tipo');
             const responsavel = labelRegistro(atendimento, 'responsavel_nome', 'usuario', 'responsavel');
-            
-            // Captura a data original (AAAA-MM-DD) e o horário
+
             const dataOriginal = labelRegistro(atendimento, 'data_atendimento', 'data');
             const horario = labelRegistro(atendimento, 'horario_atendimento', 'horario', 'hora');
 
-            // Converte de AAAA-MM-DD para DD/MM/AAAA
             let dataFormatada = dataOriginal;
             if (dataOriginal && dataOriginal.includes('-')) {
                 const partes = dataOriginal.split('-');
                 dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
             }
 
-            // Junta a Data já invertida com o Horário formatado (Ex: 25/06/2026 às 14:30)
             const dataHoraExibicao = horario ? `${dataFormatada} às ${horario.substring(0, 5)}` : dataFormatada;
 
             const statusFormatado = (atendimento.status || 'aberto').toLowerCase();

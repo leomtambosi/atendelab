@@ -1,14 +1,13 @@
 <?php
-// Identifica o controller atual para aplicar a classe 'active' no menu lateral
+
 $controllerAtual = $_GET['controller'] ?? 'frontend';
 $actionAtual = $_GET['action'] ?? 'dashboard';
 
-// Se o controller geral for 'frontend', validamos o link ativo pela action
+
 if ($controllerAtual === 'frontend') {
     $controllerAtual = $actionAtual;
 }
 
-// Recupera dados do usuário para verificar o perfil (administrador)
 $usuario = $_SESSION['usuario'] ?? [];
 ?>
 <aside class="sidebar" id="sidebar">

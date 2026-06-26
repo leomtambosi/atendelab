@@ -60,7 +60,6 @@ require __DIR__ . '/../layouts/header.php';
 
 <script>
 async function carregarDadosDashboard() {
-    // 1. Contagem de Pessoas
     try {
         const resPessoas = await AtendeLabApi.get('pessoas', 'listar');
         document.getElementById('totalPessoas').textContent = AtendeLabApi.toList(resPessoas).length;
@@ -68,28 +67,24 @@ async function carregarDadosDashboard() {
         document.getElementById('totalPessoas').textContent = '0'; 
     }
 
-    // 2. Contagem de Tipos (Com Autodetecção Inteligente de Rota)
     let tiposCarregados = false;
     const possiveisRotasTipos = ['tipos-atendimentos', 'tipos', 'tiposatendimentos'];
     
     for (const rota of possiveisRotasTipos) {
         try {
             const resTipos = await AtendeLabApi.get(rota, 'listar');
-            // Converte com segurança para lista (tratando se vier dentro de resTipos.dados ou direto)
             const listaTipos = AtendeLabApi.toList(resTipos);
             
             document.getElementById('totalTipos').textContent = listaTipos.length;
             tiposCarregados = true;
-            break; // Se funcionou, sai do laço
+            break;
         } catch (e) {
-            // Ignora o erro e testa a próxima variação de rota
         }
     }
     if (!tiposCarregados) {
         document.getElementById('totalTipos').textContent = '0';
     }
 
-    // 3. Contagem de Atendimentos
     try {
         const resAtendimentos = await AtendeLabApi.get('atendimentos', 'listar');
         document.getElementById('totalAtendimentos').textContent = AtendeLabApi.toList(resAtendimentos).length;

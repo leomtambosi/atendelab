@@ -84,7 +84,6 @@ const formTipo = document.getElementById('formTipo');
 const cardFormulario = document.getElementById('cardFormulario');
 const formTitulo = document.getElementById('formTitulo');
 
-// Variável global para armazenar qual nome de rota funcionou (evita testar toda vez)
 let rotaCorretaTipos = null;
 
 function novoTipo() {
@@ -102,13 +101,11 @@ function fecharFormulario() {
     formTipo.reset();
 }
 
-// Função inteligente que testa qual rota o seu backend realmente aceita
 async function descobrirRotaEEfetuarGet(action, params = {}) {
     if (rotaCorretaTipos) {
         return await AtendeLabApi.get(rotaCorretaTipos, action, params);
     }
 
-    // Lista de todas as possibilidades que o seu backend pode ter mapeado no routes.php
     const possiveisRotas = ['tipos-atendimentos', 'tipos', 'tiposatendimentos', 'tipo_atendimento'];
     
     for (const rota of possiveisRotas) {
@@ -117,9 +114,8 @@ async function descobrirRotaEEfetuarGet(action, params = {}) {
             rotaCorretaTipos = rota; // Sucesso! Guarda a rota certa para as próximas chamadas
             return res;
         } catch (err) {
-            // Se o erro for "Controller não encontrado", ignora e testa a próxima rota da lista
             if (!err.message.includes('Controller') && !err.message.includes('encontrado')) {
-                throw err; // Se for outro erro (ex: banco), repassa para frente
+                throw err;
             }
         }
     }
@@ -210,7 +206,6 @@ formTipo.addEventListener('submit', async event => {
     };
     
     try {
-        // Usa a mesma rota que funcionou com sucesso na listagem
         const rotaDestino = rotaCorretaTipos || 'tipos-atendimentos';
         await AtendeLabApi.post(rotaDestino, acao, dadosPayload, id ? { id: id } : {});
         

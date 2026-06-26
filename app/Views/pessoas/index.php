@@ -33,12 +33,15 @@ require __DIR__ . '/../layouts/header.php';
                 
                 <div class="col-md-4">
                     <label class="form-label">CPF *</label>
-                    <input class="form-control" type="text" name="cpf" id="pessoaDocumento" required>
+                    <input class="form-control" type="text" name="cpf" id="pessoaDocumento" 
+                           maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
+                           placeholder="Apenas 11 números" required>
                 </div>
                 
                 <div class="col-md-4">
                     <label class="form-label">Telefone</label>
-                    <input class="form-control" type="tel" name="telefone" id="pessoaTelefone">
+                    <input class="form-control" type="text" name="telefone" id="pessoaTelefone" 
+                           maxlength="14" placeholder="(99) 9999-9999">
                 </div>
                 
                 <div class="col-md-4">
@@ -134,10 +137,10 @@ function fecharFormulario() {
 async function carregarPessoas() {
     try {
         const resposta = await AtendeLabApi.get('pessoas', 'listar');
-        const pessoas = AtendeLabApi.toList(resposta);
+        const ambassadors = AtendeLabApi.toList(resposta);
         const tbody = document.getElementById('tabelaPessoas');
         
-        if (!pessoas.length) {
+        if (!ambassadors.length) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="8" class="text-center py-4">
@@ -148,7 +151,7 @@ async function carregarPessoas() {
             return;
         }
         
-        tbody.innerHTML = pessoas.map(pessoa => {
+        tbody.innerHTML = ambassadors.map(pessoa => {
             const badgeClass = Math.abs(pessoa.status) === 0 || pessoa.status === 'inativo' ? 'text-bg-danger' : 'text-bg-success';
             
             return `
@@ -187,13 +190,11 @@ async function carregarPessoas() {
 
 async function editarPessoa(id) {
     try {
-        // CORREÇÃO DA BUSCA: Garante o envio do parâmetro ID para obter os dados atuais da pessoa
         const resposta = await AtendeLabApi.get('pessoas', 'buscar', { id: id });
         const pessoa = resposta.dados || resposta;
         
         formTitulo.textContent = 'Editar pessoa';
         
-        // Alimenta o formulário com o ID e os dados vindo do banco
         document.getElementById('pessoaId').value = pessoa.id;
         document.getElementById('pessoaNome').value = pessoa.nome;
         document.getElementById('pessoaDocumento').value = pessoa.cpf || pessoa.documento || '';
@@ -247,8 +248,6 @@ formPessoa.addEventListener('submit', async event => {
     };
     
     try {
-        // Envia a ação correta ('criar' ou 'atualizar') com o payload estruturado
-        // Passamos também o { id } como terceiro parâmetro de query string para prevenir restrições de rotas de atualização do PHP
         await AtendeLabApi.post(
             'pessoas',
             acao,

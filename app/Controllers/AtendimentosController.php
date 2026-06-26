@@ -21,7 +21,6 @@ class AtendimentosController
         echo json_encode($dados, JSON_UNESCAPED_UNICODE);
     }
 
-    // Listagem com JOIN para exibir nomes em vez de IDs
     public function listar(): void
     {
         $sql = 'SELECT a.id, p.nome AS pessoa_nome, t.nome AS tipo_nome,
@@ -36,7 +35,6 @@ class AtendimentosController
         $this->json($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    // Buscar um atendimento específico por ID
     public function buscarPorId(): void
     {
         $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
@@ -63,7 +61,6 @@ class AtendimentosController
         $this->json($atendimento);
     }
 
-    // Criar um novo atendimento com trava para datas retroativas
     public function criar(): void
     {
         $pessoa_id           = filter_input(INPUT_POST, 'pessoa_id', FILTER_VALIDATE_INT);
@@ -73,10 +70,8 @@ class AtendimentosController
         $horario_atendimento = $_POST['horario_atendimento'] ?? '';
         $status              = $_POST['status'] ?? 'aberto';
 
-        // Pega o usuário da sessão
         $usuario_id = $_SESSION['usuario']['id'] ?? null;
 
-        // 1. Validação de campos obrigatórios básicos
         if (!$pessoa_id || !$tipo_id || !$usuario_id || $descricao === '' || $data_atendimento === '' || $horario_atendimento === '') {
             $this->json(['erro' => 'Todos os campos obrigatórios devem ser preenchidos.'], 422);
             return;
@@ -87,7 +82,6 @@ class AtendimentosController
             return;
         }
 
-        // 2. Trava de segurança no Backend: Impede datas passadas
         $hoje = date('Y-m-d');
         if ($data_atendimento < $hoje) {
             $this->json(['erro' => 'Não é permitido registrar atendimentos em datas passadas.'], 400);
@@ -117,7 +111,6 @@ class AtendimentosController
         }
     }
 
-    // Alterar status (e opcionalmente observação final)
     public function alterarStatus(): void
     {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
