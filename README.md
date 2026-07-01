@@ -25,7 +25,7 @@ Como executar localmente
 3. Iniciar Apache e MySQL.
 4. Criar o banco atendelab.
 5. Importar o script database/atendelab.sql.
-6. Acessar http://localhost/atendelab/public/
+6. Acessar http://localhost/atendelab/public/](http://localhost/atendelab/public/?controller=auth&action=login
 
 Acesso ao Login
 
