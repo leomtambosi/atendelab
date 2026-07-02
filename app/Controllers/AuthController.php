@@ -30,6 +30,15 @@ class AuthController
         require __DIR__ . '/../Views/auth/login.php';
     }
 
+    public function dashboard(): void
+    {
+        exigirAutenticacao();
+
+        $usuario = usuarioAtual();
+
+        require __DIR__ . '/../Views/dashboard/index.php';
+    }
+
     public function entrar(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -91,14 +100,7 @@ class AuthController
         exit;
     }
 
-    public function dashboard(): void
-    {
-        exigirAutenticacao();
-
-        $usuario = usuarioAtual();
-
-        require __DIR__ . '/../Views/dashboard/index.php';
-    }
+    
 
     public function logout(): void
     {

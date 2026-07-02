@@ -183,7 +183,7 @@ switch ($controller) {
 
             default:
                 http_response_code(404);
-                echo 'Ação de tipos de atendimento não encontrada.';
+                echo 'Ação de tipos de Atendimento não encontrada.';
         }
         break;
 
@@ -219,7 +219,7 @@ switch ($controller) {
 
             default:
                 http_response_code(404);
-                echo 'Ação de atendimentos não encontrada.';
+                echo 'Ação de Atendimentos não encontrada.';
         }
         break;
 
