@@ -17,6 +17,7 @@ Funcionalidades previstas
 * Página pública
 * Login
 * Dashboard
+* telas de Pessoas, tipos de atendimentos e atendimentos
 
 Como executar localmente
 
